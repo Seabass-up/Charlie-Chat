@@ -18,14 +18,15 @@
         "-y",
         "@modelcontextprotocol/server-puppeteer"
       ],
-      "disabled": true
+      "disabled": false
     },
     "memory": {
       "command": "npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-memory"
-      ]
+      ],
+      "disabled": false
     },
     "postgres": {
       "command": "npx",
@@ -34,7 +35,7 @@
         "@modelcontextprotocol/server-postgres",
         "postgres://username:password@localhost:5432/dbname"
       ],
-      "disabled": true
+      "disabled": false
     },
     "sequential-thinking": {
       "command": "npx",
@@ -42,7 +43,7 @@
         "-y",
         "@modelcontextprotocol/server-sequential-thinking"
       ],
-      "disabled": true
+      "disabled": false
     },
     "mcp-playwright": {
       "command": "npx",
@@ -51,7 +52,7 @@
         "@playwright/mcp@latest"
       ],
       "env": {},
-      "disabled": true
+      "disabled": false
     },
     "deepwiki": {
       "command": "npx",
@@ -74,7 +75,8 @@
         "DISABLE_CONSOLE_OUTPUT": "true",
         "N8N_API_URL": "http://localhost:5678",
         "N8N_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhMDkyMWQwYy1iNGViLTQwYzgtODg2MS0wYTUwNmU2YjRmNmEiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzU3MTc4MjMyLCJleHAiOjE3NTk3MjMyMDB9.kDmP6DcA1Q0UjpkTG99qYP_dW07DaYoybacJX7tak24"
-      }
+      },
+      "disabled": false
     }
   }
 }

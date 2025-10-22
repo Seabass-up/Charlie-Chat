@@ -1,0 +1,13 @@
+# MCP (Model Context Protocol) packages for Charlie-Chat
+# Install these globally for MCP server functionality
+
+# Core MCP servers
+@modelcontextprotocol/server-filesystem
+@modelcontextprotocol/server-memory
+@modelcontextprotocol/server-puppeteer
+@modelcontextprotocol/server-postgres
+@modelcontextprotocol/server-sequential-thinking
+@playwright/mcp
+
+# Remote MCP servers
+mcp-remote

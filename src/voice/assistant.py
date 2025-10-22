@@ -30,7 +30,7 @@ class VoiceAssistant:
     def __init__(self, config: Dict[str, Any] = None):
         """
         Initialize the Voice Assistant.
-        
+
         Args:
             config: Configuration dictionary for the voice assistant.
         """
@@ -38,14 +38,38 @@ class VoiceAssistant:
         self.is_listening = False
         self.is_speaking = False
         self.june_instance = None
-        
-        # Get model configurations from config
-        # The config passed is already the voice section from charlie.py
+
+        # Get model configurations from config with defaults
         self.ollama_model = self.config.get('ollama_model', 'gpt-oss:120b')
         self.whisper_model = self.config.get('whisper_model', 'openai/whisper-small.en')
         self.tts_model = self.config.get('tts_model', 'coqui/XTTS-v2')
         self.ollama_api_endpoint = self.config.get('ollama_api_endpoint', 'https://api.ollama.com')
         self.ollama_api_key = self.config.get('ollama_api_key', 'your_api_key_here')
+        self.wake_word = self.config.get('wake_word', 'Charlie')
+        self.continuous = self.config.get('continuous', False)
+        self.listen_timeout = self.config.get('listen_timeout', 5)
+
+        # Get configurable June environment path
+        self.june_env_path = self.config.get('june_env_path', 'C:/Users/seaba/june-env')
+        if not self.june_env_path or not os.path.exists(self.june_env_path):
+            logger.error(f"June environment path not found: {self.june_env_path}")
+            logger.error("Please set 'june_env_path' in config.yaml to the correct path")
+            logger.error("Or create the environment: python -m venv june-env && pip install june-va")
+            raise ImportError(f"June environment not found at {self.june_env_path}")
+
+        self.june_cmd = os.path.join(self.june_env_path, "Scripts", "june-va.exe")
+        self.june_python = os.path.join(self.june_env_path, "Scripts", "python.exe")
+
+        # Validate required binaries exist
+        if not os.path.exists(self.june_python):
+            logger.error(f"Python not found in June environment: {self.june_python}")
+            logger.error("Please reinstall the June environment: pip install june-va")
+            raise ImportError(f"Python not found in June environment: {self.june_python}")
+
+        # June configuration file path
+        self.june_config_dir = os.path.expanduser("~/.june")
+        self.june_config_file = os.path.join(self.june_config_dir, "config.json")
+
         # Initialize pyttsx3 engine for TTS (offline, works on Python 3.12)
         try:
             self.engine = pyttsx3.init()
@@ -54,20 +78,20 @@ class VoiceAssistant:
             logger.info("Initialized pyttsx3 TTS engine")
         except Exception as e:
             logger.error(f"Failed to initialize pyttsx3 engine: {e}")
+            logger.error("TTS functionality will be disabled")
             self.engine = None
-        
+
+        # Check June binary availability
+        self.use_module = not os.path.exists(self.june_cmd)
+        if self.use_module:
+            logger.info("Using June as Python module (june-va.exe not found)")
+        else:
+            logger.info(f"Using June binary: {self.june_cmd}")
+
         logger.info(f"Using Ollama model: {self.ollama_model}")
         logger.info(f"Using Ollama API endpoint: {self.ollama_api_endpoint}")
-        
-        # Find the June virtual environment
-        self.june_env_path = "C:\\Users\\seaba\\june-env"
-        self.june_cmd = os.path.join(self.june_env_path, "Scripts", "june-va.exe")
-        self.june_python = os.path.join(self.june_env_path, "Scripts", "python.exe")
-        
-        # June configuration file path
-        self.june_config_dir = os.path.expanduser("~/.june")
-        self.june_config_file = os.path.join(self.june_config_dir, "config.json")
-        
+        logger.info(f"June environment: {self.june_env_path}")
+
         # Initialize June components lazily to avoid importing until needed
         self._initialized = False
         
@@ -75,37 +99,54 @@ class VoiceAssistant:
         """Initialize June components for voice interaction."""
         if self._initialized:
             return
-            
+
         try:
             # Check if June environment exists
             logger.info("Checking June environment...")
-            
+
             if not os.path.exists(self.june_env_path):
                 logger.error(f"June environment not found at {self.june_env_path}")
-                logger.error("Please create a virtual environment for June: python -m venv june-env")
-                logger.error("Then install June: pip install june-va")
+                logger.error("SOLUTION: Set 'june_env_path' in config.yaml to the correct path")
+                logger.error("Or create it: python -m venv june-env && pip install june-va")
                 raise ImportError(f"June environment not found at {self.june_env_path}")
-                
-            if not os.path.exists(self.june_cmd):
-                # Try using the module directly if the command is not found
-                self.use_module = True
-                logger.warning(f"June command not found at {self.june_cmd}")
-                logger.info("Will try using the module directly")
-                
-                if not os.path.exists(self.june_python):
-                    logger.error(f"Python not found in June environment at {self.june_python}")
-                    raise ImportError(f"Python not found in June environment at {self.june_python}")
-            else:
-                self.use_module = False
-            
+
+            if not os.path.exists(self.june_python):
+                logger.error(f"Python executable not found in June environment: {self.june_python}")
+                logger.error("SOLUTION: Reinstall June: pip install june-va")
+                raise ImportError(f"Python not found in June environment: {self.june_python}")
+
+            # Check if June module is available
+            try:
+                if self.use_module:
+                    # Test if we can import the module
+                    subprocess.run([self.june_python, "-c", "import june_va"],
+                                 capture_output=True, timeout=10)
+                else:
+                    # Test if the binary exists and is executable
+                    if not os.path.exists(self.june_cmd):
+                        logger.error(f"June binary not found: {self.june_cmd}")
+                        logger.error("SOLUTION: Run 'pip install june-va' in the June environment")
+                        raise ImportError(f"June binary not found: {self.june_cmd}")
+            except subprocess.TimeoutExpired:
+                logger.error("June module import test timed out")
+                raise ImportError("June module is not properly installed")
+            except subprocess.CalledProcessError as e:
+                logger.error(f"June module test failed: {e}")
+                logger.error("SOLUTION: Reinstall June: pip install june-va")
+                raise ImportError(f"June module test failed: {e}")
+
             # Update June configuration file with our settings
             self._update_june_config()
-            
-            logger.info("June environment found")
+
+            logger.info("June environment validated successfully")
             self._initialized = True
-            
+
+        except ImportError:
+            # Re-raise ImportError as it's expected to be caught by caller
+            raise
         except Exception as e:
-            logger.error(f"Error initializing June components: {e}")
+            logger.error(f"Unexpected error initializing June components: {e}")
+            logger.error("Please check your configuration and June installation")
             raise
     
     def _update_june_config(self):
@@ -329,12 +370,12 @@ class VoiceAssistant:
             return self.process_and_speak(text)
         return ""
     
-    def start_continuous_listening(self, callback: Callable[[str], None], 
+    def start_continuous_listening(self, callback: Callable[[str], None],
                                   wake_word: Optional[str] = None,
                                   listen_timeout: int = 5):
         """
         Start continuous listening for speech in a separate thread.
-        
+
         Args:
             callback: Function to call with transcribed text.
             wake_word: Optional wake word to trigger processing.
@@ -342,33 +383,42 @@ class VoiceAssistant:
         """
         if not self._initialized:
             self.initialize()
-            
+
+        # Use configured wake word if not provided
+        if wake_word is None:
+            wake_word = self.wake_word
+
         def listening_thread():
             logger.info("Starting continuous listening...")
-            
+            logger.info(f"Wake word: '{wake_word}' (use None or empty string to disable)")
+
             while self.is_listening:
                 try:
                     # Listen for speech
                     transcription = self.listen()
-                    
+
                     # Process if wake word is detected or not required
                     if transcription:
-                        if wake_word is None or wake_word.lower() in transcription.lower():
+                        if wake_word is None or wake_word == "" or wake_word.lower() in transcription.lower():
                             # Remove wake word from transcription if present
                             if wake_word and wake_word.lower() in transcription.lower():
                                 transcription = transcription.lower().replace(wake_word.lower(), "").strip()
-                                
+
                             # Call callback with transcription
                             if transcription:
+                                logger.info(f"Processing: {transcription}")
                                 callback(transcription)
-                        
+                            else:
+                                logger.info("Wake word detected but no additional speech")
+
                     # Wait a bit before listening again
                     time.sleep(0.1)
-                    
+
                 except Exception as e:
                     logger.error(f"Error in listening thread: {e}")
+                    logger.error("Continuing to listen... (check June installation)")
                     time.sleep(1)  # Wait a bit longer on error
-        
+
         # Start listening thread
         self.is_listening = True
         thread = threading.Thread(target=listening_thread)

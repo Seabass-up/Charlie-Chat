@@ -1,8 +1,8 @@
-# Charlie Application Configuration
+# Charlie-Chat Application Configuration
 
 # Application settings
 application:
-  name: Charlie
+  name: Charlie-Chat
   version: 0.1.0
   debug_mode: false
   log_level: INFO  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
@@ -22,6 +22,7 @@ features:
 
 # Voice assistant settings
 voice:
+  june_env_path: C:/Users/seaba/june-env  # Path to June virtual environment (configurable)
   ollama_model: gpt-oss:120b  # Ollama model to use
   whisper_model: openai/whisper-small.en  # Whisper model for speech recognition
   tts_model: coqui/XTTS-v2  # TTS model for speech synthesis
@@ -36,3 +37,9 @@ services:
   timeout_seconds: 30
   retry_attempts: 3
   base_url: https://api.example.com/v1
+
+# MCP (Model Context Protocol) settings
+mcp:
+  enabled: true
+  config_path: mcp_config.json
+  auto_install_packages: true

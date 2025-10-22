@@ -61,23 +61,50 @@ class Charlie:
 
         Attempts to import and instantiate the voice assistant based on configuration.
         If any import or initialization error occurs, the voice features are disabled
-        and a warning is logged.
+        and a warning is logged with actionable solutions.
         """
         try:
             from src.voice.assistant import VoiceAssistant
 
-            # Get voice assistant configuration
+            # Get voice assistant configuration with validation
             voiceConfig = self.config_manager.get_section('voice', {})
+
+            # Validate critical voice configuration
+            required_keys = ['ollama_model', 'whisper_model', 'june_env_path']
+            missing_keys = [key for key in required_keys if key not in voiceConfig or not voiceConfig[key]]
+
+            if missing_keys:
+                logger.warning(f"Missing voice configuration keys: {missing_keys}")
+                logger.warning("Please check your config.yaml file in the 'voice' section")
+                logger.warning("Required keys: ollama_model, whisper_model, june_env_path")
+                logger.warning("Voice features will be disabled")
+                return
+
+            # Validate June environment path exists
+            june_path = voiceConfig.get('june_env_path')
+            if june_path and not os.path.exists(june_path):
+                logger.warning(f"June environment not found at: {june_path}")
+                logger.warning("SOLUTION: Create it with 'python -m venv june-env' and 'pip install june-va'")
+                logger.warning("Or update 'june_env_path' in config.yaml to the correct path")
+                logger.warning("Voice features will be disabled")
+                return
 
             # Create voice assistant
             self.voice_assistant = VoiceAssistant(voiceConfig)
-            logger.info("Voice assistant initialized")
+            logger.info("Voice assistant initialized successfully")
 
         except ImportError as e:
             logger.warning(f"Could not import voice assistant: {e}")
+            logger.warning("SOLUTION: Install required packages: pip install pyttsx3 transformers torch")
+            logger.warning("Voice features will be disabled")
+        except FileNotFoundError as e:
+            logger.warning(f"Voice assistant configuration file not found: {e}")
+            logger.warning("SOLUTION: Check that config.yaml exists and has a 'voice' section")
             logger.warning("Voice features will be disabled")
         except Exception as e:
             logger.error(f"Error initializing voice assistant: {e}")
+            logger.error("SOLUTION: Check your June installation and configuration")
+            logger.error("Run: python -c 'import src.voice.assistant' to test imports")
             logger.warning("Voice features will be disabled")
     
     def run(self, args: list[str] | None = None) -> None:
