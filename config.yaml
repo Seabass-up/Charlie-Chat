@@ -1,0 +1,38 @@
+# Charlie Application Configuration
+
+# Application settings
+application:
+  name: Charlie
+  version: 0.1.0
+  debug_mode: false
+  log_level: INFO  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+# User preferences
+user:
+  username: default_user
+  theme: light  # Options: light, dark
+  language: en  # Options: en, es, fr
+
+# Feature toggles
+features:
+  advanced_mode: false
+  notifications: true
+  auto_update: true
+  voice_enabled: true  # Enable voice assistant capabilities
+
+# Voice assistant settings
+voice:
+  ollama_model: gpt-oss:120b  # Ollama model to use
+  whisper_model: openai/whisper-small.en  # Whisper model for speech recognition
+  tts_model: coqui/XTTS-v2  # TTS model for speech synthesis
+  wake_word: Charlie  # Optional wake word to trigger the assistant
+  continuous: false  # Enable continuous listening mode
+  listen_timeout: 5  # Timeout in seconds for listening
+  ollama_api_endpoint: https://ollama.com  # Endpoint for Ollama API
+  ollama_api_key: 66a570d6bfe14b5ea4c5f021e54dd4b3.02WgiktLpEMgVOZhsB4QikeB  # API key for Ollama Turbo API
+
+# External services
+services:
+  timeout_seconds: 30
+  retry_attempts: 3
+  base_url: https://api.example.com/v1

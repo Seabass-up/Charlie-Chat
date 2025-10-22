@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charlie AI Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <!-- Marked.js for markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Ribbon with controls -->
+        <div class="ribbon">
+            <div class="ribbon-section">
+                <h3>Charlie Controls</h3>
+                <button id="clear-chat" class="ribbon-btn">🗑️ Clear Chat</button>
+                <button id="export-chat" class="ribbon-btn">📄 Export</button>
+            </div>
+            <div class="ribbon-section">
+                <h3>Voice Settings</h3>
+                <button id="toggle-voice" class="ribbon-btn">🎤 Enable Voice</button>
+                <button id="start-listening" class="ribbon-btn voice-btn">🎙️ Listen</button>
+                <button id="stop-listening" class="ribbon-btn voice-btn" disabled>⏹️ Stop</button>
+            </div>
+            <div class="ribbon-section">
+                <h3>MCP Tools</h3>
+                <button id="mcp-tools-btn" class="ribbon-btn">🔧 Tools</button>
+                <select id="model-select" title="Select AI Model">
+                    <option value="gpt-oss:120b">GPT-OSS 120B</option>
+                    <option value="llama3.2:3b">Llama 3.2 3B</option>
+                    <option value="qwen2.5:7b">Qwen 2.5 7B</option>
+                </select>
+                <button id="mcp-search-btn" class="ribbon-btn">🔍 Search</button>
+            </div>
+        </div>
+
+        <header>
+            <div class="header-content">
+                <div class="logo-section">
+                    <h1>🤖 Charlie</h1>
+                    <p>Your Personal AI Assistant</p>
+                </div>
+                <div class="status-section">
+                    <div class="status-indicator" id="connection-status">
+                        <span class="status-dot"></span>
+                        <span>Connected</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="file-browser-panel">
+                <div class="file-browser-header">
+                    <h3>📁 File Browser</h3>
+                    <button id="toggle-file-browser" class="toggle-btn">▶️</button>
+                </div>
+                <div id="file-browser-content" class="file-browser-content collapsed">
+                    <div class="file-browser-controls">
+                        <button id="refresh-files" class="file-btn">🔄 Refresh</button>
+                        <button id="go-up" class="file-btn">⬆️ Up</button>
+                    </div>
+                    <div id="current-path" class="current-path">C:\Users\seaba\CascadeProjects\Charlie</div>
+                    <div id="file-list" class="file-list"></div>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div id="chat-window" class="chat-window">
+                    <div id="message-container"></div>
+                </div>
+                <div class="input-area">
+                    <input type="text" id="user-input" placeholder="Ask Charlie anything... (Use ``` for code blocks)">
+                    <button id="send-button">Send</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>
